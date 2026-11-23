@@ -6,6 +6,16 @@ const inputTaskDescEl = document.getElementById("task-desc")
 
 const taskListEl = document.getElementById("tasks")
 
+function createElement(tag, className, textContent,) {
+    const el = document.createElement(tag)
+    if (className) {
+        el.classList.add(className)
+    }
+    if (textContent) {
+        el.textContent = textContent
+    }
+    return el
+}
 
 async function addTask() {
     try {
@@ -108,8 +118,38 @@ async function loadTasks() {
                     await loadTasks()
                 }
             )
+            
+            const btnEdit = document.createElement("button")
+            btnEdit.textContent = "Изменить"
+            btnEdit.classList.add("task__btn-edit")
+            btnEdit.addEventListener("click", async () => {
+                const inputTitleEdit = document.createElement("input")
+                inputTitleEdit.classList.add("task-form__input")
+                inputTitleEdit.value = title
 
-            li.append(h2, p, btnDelete)
+                const inputDescEdit = document.createElement("textarea")
+                inputDescEdit.classList.add("task-form__input")
+                inputDescEdit.value = desc
+
+                h2.replaceWith(inputTitleEdit)
+                p.replaceWith(inputDescEdit)
+
+                btnEdit.disabled = true
+
+                const btnSave = createElement("button", "task__btn-save", "Сохранить")
+                const btnCancel = createElement("button", "task__btn-cancel", "Отмена")
+                btnCancel.addEventListener("click", () => {
+                    btnEdit.disabled = false
+                    inputTitleEdit.replaceWith(h2)
+                    inputDescEdit.replaceWith(p)
+                    btnSave.remove()
+                    btnCancel.remove()
+                })
+
+                li.append(btnSave, btnCancel)
+            })
+
+            li.append(h2, p, btnDelete, btnEdit)
 
             taskListEl.appendChild(li)
         }

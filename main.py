@@ -15,8 +15,14 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 class TaskCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    title: str = Field(min_length=1)
-    desc: str = Field(min_length=1)
+    title: str | None = Field(min_length=1)
+    desc: str | None = Field(min_length=1)
+
+class TaskUpdate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    title: str = Field(min_length=1, default=None)
+    desc: str = Field(min_length=1, default=None)
 
 def insertDefaultData():
     data = [
@@ -87,6 +93,27 @@ def del_task(task_id: str):
 
     raise HTTPException(status_code=404, detail="Задача не найдена")
 
+@app.patch("/api/tasks/{task_id}")
+def update_task(new_task: TaskUpdate, task_id: str):
+    updates = new_task.model_dump(exclude_unset=True, exclude_none=True)
+
+    if updates == {}:
+        raise HTTPException(status_code=400, detail="Вы не ввели новые данные")
+
+    with open(FILE_NAME_DATA, "r", encoding="UTF-8") as file:
+        tasks = json.load(file)
+
+    for item in tasks:
+        if item["id"] == task_id:
+            item.update(updates)
+
+            with open(FILE_NAME_DATA, "w", encoding="UTF-8") as file:
+                json.dump(tasks, file, ensure_ascii=False, indent=4)
+
+            return {"message": "Данные успешно изменены!"}
+
+    raise HTTPException(status_code=404, detail="Задача не найдена")
+    
 if __name__ == "__main__":
     insertDefaultData()
     uvicorn.run(app, host="127.0.0.1", port=8000)
